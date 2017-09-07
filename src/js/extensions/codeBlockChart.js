@@ -155,32 +155,24 @@ function chartPlugin(editor, pluginOptions = {}) {
      * @returns {string} - rendered html
      */
     function chartReplacer(codeBlockChartData, language) {
-        let renderedHTML;
-        renderedHTML = `<div id="test-chart" class="chart" />`;
+        const randomId = `chart-${Math.random().toString(36).substr(2, 10)}`;
+        const renderedHTML = `<div id="${randomId}" class="chart" />`;
 
         let [, chartType] = language.split(':');
         chartType = util.isUndefined(chartType) ? 'bar' : chartType;
 
         const {data, options} = TSVChartParser.parse(codeBlockChartData);
 
-        setTimeout(() => chartRenderer(chartType, data, options), 0);
+        setTimeout(() => {
+            const chartContainer = document.querySelector(`#${randomId}`);
+            try {
+                tui.chart[`${chartType}Chart`](chartContainer, data, options);
+            } catch (e) {
+                chartContainer.innerText = 'invalid chart data';
+            }
+        }, 0);
 
         return renderedHTML;
-    }
-
-    /**
-     * render chart
-     * @param {string} type - chart type
-     * @param {object} chartData - tui chart data
-     * @param {object} chartOptions - tui chart options
-     */
-    function chartRenderer(type, chartData, chartOptions) {
-        const chartContainer = document.querySelector('#test-chart');
-        try {
-            tui.chart[`${type}Chart`](chartContainer, chartData, chartOptions);
-        } catch (e) {
-            chartContainer.innerText = 'invalid chart data';
-        }
     }
 
     languages.forEach(language => codeBlockManager.setReplacer(language, chartReplacer));
